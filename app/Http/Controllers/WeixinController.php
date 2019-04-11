@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\DB;
+use GuzzleHttp\Client;
 
 class WeixinController extends Controller
 {
@@ -101,5 +102,50 @@ class WeixinController extends Controller
         $info = json_decode($res,true);
     //    print_r($info['openid']);
         return $info;
+    }
+    //创建微信公众号菜单
+    /**
+     * 1、用代码实现需下载第三方类库 
+     * 2、POST（请使用https协议） https://api.weixin.qq.com/cgi-bin/menu/create?access_token=ACCESS_TOKEN
+     * 3、 composer require guzzlehttp(库名)/guzzle
+     */
+    public function create(){
+        // echo 1111;die;
+        $url = 'https://api.weixin.qq.com/cgi-bin/menu/create?access_token='.$this->token();
+        //接口数据
+        $post_arr = [
+            'button' =>[
+                [
+                    'type'=> 'click',
+                    'name'=> '球球',
+                    'key'=>"V1001_TODAY_MUSIC"
+                ],
+                [
+                    // 'name'=> '月七',
+                    // "sub_button" =>[
+                    //     'type'=> 'view',
+                    //     'name'=> '搜索',
+                    //     'url'=>"http://www.soso.com/"
+                    // ],
+                    // [
+                        'type'=> 'click',
+                        'name'=> '赞下',
+                        'key'=>"V1001_GOOD"
+                    // ]
+                ]
+            ]
+        ];
+        //格式JSON
+        $json = json_encode($post_arr,JSON_UNESCAPED_UNICODE); //JSON_UNESCAPED_UNICODE 处理中文
+        //发送请求
+        $client = new Client();
+        $response = $client->request('POST',$url,[
+            'body' => $json
+        ]);
+        //处理响应
+        $res = $response->getBody();
+        echo $res;
+
+        // $arr = json_decode();
     }
 }

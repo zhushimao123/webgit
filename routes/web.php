@@ -34,4 +34,7 @@ Route::get('token','WeixinController@token');
  * userinfo
  */
 Route::get('userinfo','WeixinController@userinfo');
-
+/*
+ * 创建微信公众号 
+ */
+Route::any('create','WeixinController@create');
