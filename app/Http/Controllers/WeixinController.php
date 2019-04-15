@@ -147,9 +147,9 @@ class WeixinController extends Controller
                     //     'url'=>"http://www.soso.com/"
                     // ],
                     // [
-                        'type'=> 'click',
-                        'name'=> '赞下',
-                        'key'=>"V1001_GOOD"
+                        "type"=>"view",
+                        "name"=>"搜索",
+                        "url"=>"http://www.soso.com/"
                     // ]
                 ]
             ]
