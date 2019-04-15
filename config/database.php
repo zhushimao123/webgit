@@ -52,8 +52,12 @@ return [
             'prefix' => '',
             'strict' => true,
             'engine' => null,
+            'options'=>[
+                PDO::ATTR_TIMEOUT=>30,
+                PDO::ATTR_PERSISTENT=>true,
+        
+            ]
         ],
-
         'pgsql' => [
             'driver' => 'pgsql',
             'host' => env('DB_HOST', '127.0.0.1'),

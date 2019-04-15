@@ -29,6 +29,7 @@ class WeixinController extends Controller
     {
         //接受微信服务器推送
         $text = file_get_contents('php://input');
+        // echo $text;
         $time = date('Y-m-d H:i:s');
         $str = $time . $text . "\n";
         is_dir('logs') or mkdir('logs', 0777, true);
@@ -37,11 +38,12 @@ class WeixinController extends Controller
         $data = simplexml_load_string($text);
         $wx_id = $data-> ToUserName;  //公众号id
         $openid = $data-> FromUserName;//用户的openid
-//        echo $data-> CreateTime;echo "<br>";  //推送时间
-//        echo $data-> MsgType;echo "<br>";   //消息类型
+    //    echo $data-> CreateTime;echo "<br>";  //推送时间
+        $MsgType = $data-> MsgType;   //消息类型  image  voice
+        // echo  $content;echo "<br>";
         $type =  $data-> Event;    //事件类型
+        $MediaId = $data -> MediaId;
 //        echo $data-> EventKey;echo "<br>";  //事件密钥
-       
         //substribe 扫码关注事件
        if($type =='subscribe'){
             //根据openid来查是否是唯一用户关注
@@ -64,8 +66,25 @@ class WeixinController extends Controller
                     'subscribe_time'=> $result['subscribe_time']
                 ];
                 $insert = DB::table('p_weixin')->insert($usersinfo);
-                echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['. '欢迎关注 '. $arr->nickname .']]></Content></xml>';
+                echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎关注 '. $arr->nickname .']]></Content></xml>';
             }
+       }
+       if($MsgType == 'text'){
+            $Content = $data-> Content; //微信发送的内容哦
+            $result = $this -> userinfo($openid);  //用户信息
+            $ll = $result['openid'];
+            $date = [
+                'openid'=>$ll,
+                'nickname'=> $result['nickname'],
+                'sex'=> $result['sex'],
+                'city'=> $result['city'],
+                'province'=> $result['province'],
+                'headimgurl'=> $result['headimgurl'],
+                'subscribe_time'=> $result['subscribe_time'],
+                'text'=> $Content
+            ];
+            $save = DB::table('wtext')->insertGetId($date);
+            print_r($save);
        }
     }
 
@@ -100,7 +119,6 @@ class WeixinController extends Controller
         $url = 'https://api.weixin.qq.com/cgi-bin/user/info?access_token='.$this->token().'&openid='.$openid.'&lang=zh_CN';
         $res =  file_get_contents($url);
         $info = json_decode($res,true);
-    //    print_r($info['openid']);
         return $info;
     }
     //创建微信公众号菜单
@@ -147,5 +165,14 @@ class WeixinController extends Controller
         echo $res;
 
         // $arr = json_decode();
+    }
+    //获取临时素材
+    public function content()
+    {
+        $url = 'https://api.weixin.qq.com/cgi-bin/media/get?access_token='.$this->token().'&media_id=MEDIA_ID';
+        $text = file_get_contents($url);
+        echo $text;
+      
+
     }
 }
