@@ -45,7 +45,9 @@ class WeixinController extends Controller
         //substribe 扫码关注事件
        if($type =='subscribe'){
             //根据openid来查是否是唯一用户关注
-            $arr = DB::table('p_weixin')->where(['openid'=>$openid])->first();
+            $l = DB::table('p_weixin')->where(['openid'=>$openid])->first();
+            $x= json_encode($l,true);
+            $arr = json_decode($x,true);
             // var_dump($arr);die;
             if($arr){ //关注过
                 //微信可咦通过 xml 格式来返回给微信用户消息
