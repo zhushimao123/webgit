@@ -52,6 +52,7 @@ class WeixinController extends Controller
                 //微信可咦通过 xml 格式来返回给微信用户消息
                 echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎回来'.$arr->nickname.']]></Content></xml>';
             }else{
+                echo "刘zi也傻逼";die;
                 echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎关注 '.$arr->nickname.']]></Content></xml>';
                  //获取用户信息
                 $result = $this -> userinfo($openid);
