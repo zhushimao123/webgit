@@ -50,8 +50,9 @@ class WeixinController extends Controller
             $arr = DB::table('p_weixin')->where(['openid'=>$openid])->first();
             if($arr){ //关注过
                 //微信可咦通过 xml 格式来返回给微信用户消息
-                echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['. '欢迎回来 '. $arr->nickname .']]></Content></xml>';
+                echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎回来'.$arr->nickname.']]></Content></xml>';
             }else{
+                echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎关注 '.$arr->nickname.']]></Content></xml>';
                  //获取用户信息
                 $result = $this -> userinfo($openid);
                 $ll = $result['openid'];
@@ -66,7 +67,6 @@ class WeixinController extends Controller
                     'subscribe_time'=> $result['subscribe_time']
                 ];
                 $insert = DB::table('p_weixin')->insert($usersinfo);
-                echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎关注 '. $arr->nickname .']]></Content></xml>';
             }
        }
        if($MsgType == 'text'){
