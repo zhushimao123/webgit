@@ -29,12 +29,10 @@ class WeixinController extends Controller
     {
         //接受微信服务器推送
         $text = file_get_contents('php://input');
-        // echo $text;
         $time = date('Y-m-d H:i:s');
         $str = $time . $text . "\n";
-        is_dir('logs') or mkdir('logs', 0777, true);
+        // is_dir('logs') or mkdir('logs', 0777, true);
         file_put_contents("logs/wx_event.log", $str, FILE_APPEND);
-
         $data = simplexml_load_string($text);
         $wx_id = $data-> ToUserName;  //公众号id
         $openid = $data-> FromUserName;//用户的openid
@@ -48,12 +46,11 @@ class WeixinController extends Controller
        if($type =='subscribe'){
             //根据openid来查是否是唯一用户关注
             $arr = DB::table('p_weixin')->where(['openid'=>$openid])->first();
+            // var_dump($arr);die;
             if($arr){ //关注过
                 //微信可咦通过 xml 格式来返回给微信用户消息
-                echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎回来'.$arr->nickname.']]></Content></xml>';
+                echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎回来'.$arr['nickname'].']]></Content></xml>';
             }else{
-                echo "刘zi也傻逼";die;
-                echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎关注 '.$arr->nickname.']]></Content></xml>';
                  //获取用户信息
                 $result = $this -> userinfo($openid);
                 $ll = $result['openid'];
@@ -68,10 +65,13 @@ class WeixinController extends Controller
                     'subscribe_time'=> $result['subscribe_time']
                 ];
                 $insert = DB::table('p_weixin')->insert($usersinfo);
+                // echo 1;die;
+                echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎关注 '.$arr['nickname'].']]></Content></xml>';
+            
             }
        }
        if($MsgType == 'text'){
-            $Content = $data-> Content; //微信发送的内容哦
+            $Content = $data-> Content; //微信发送的内容
             $result = $this -> userinfo($openid);  //用户信息
             $ll = $result['openid'];
             $date = [
