@@ -79,6 +79,11 @@ class WeixinController extends Controller
                 echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎关注 '.$arr['nickname'].']]></Content></xml>';
             
             }
+            //修改状态
+            $where = [
+                'openid'=>$openid
+            ];
+            $status = DB::table('p_weixin')->where($where)->update(['sub_status'=>1]);
        }else if($type =='unsubscribe'){
            $where = [
                'openid'=>$openid
@@ -279,7 +284,7 @@ class WeixinController extends Controller
     {
         $res = DB::table('p_weixin')->where(['sub_status'=>1])->get()->toArray();
         $open_id = array_column($res,'openid');
-        $content = '乔治是个大笨猪i';
+        $content = '猪猪';
         $result = $this-> sendText($open_id,$content);
         echo $result;
     }
