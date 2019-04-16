@@ -35,8 +35,6 @@ Route::get('token','WeixinController@token');
  */
 Route::get('userinfo','WeixinController@userinfo');
 /*
- * 创建微信公众号 
+ * 创建微信公众号 菜单
  */
 Route::any('create','WeixinController@create');
-// //获取临时素材
-Route::any('content','WeixinController@content');

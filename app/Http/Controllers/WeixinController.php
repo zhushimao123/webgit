@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use GuzzleHttp\Client;
 
 class WeixinController extends Controller
@@ -36,11 +37,18 @@ class WeixinController extends Controller
         $data = simplexml_load_string($text);
         $wx_id = $data-> ToUserName;  //公众号id
         $openid = $data-> FromUserName;//用户的openid
+        $Content = $data-> Content; //微信发送的内容
+        // echo $Content;
+   
+        $CreateTime = $data -> CreateTime; //消息发送的时间
+        // echo $CreateTime;
     //    echo $data-> CreateTime;echo "<br>";  //推送时间
-        $MsgType = $data-> MsgType;   //消息类型  image  voice
+        $MsgType = $data-> MsgType;   //消息类型  image  voice 
+        // echo $MsgType;
         // echo  $content;echo "<br>";
         $type =  $data-> Event;    //事件类型
         $MediaId = $data -> MediaId;
+        // echo $MediaId;
 //        echo $data-> EventKey;echo "<br>";  //事件密钥
         //substribe 扫码关注事件
        if($type =='subscribe'){
@@ -73,21 +81,63 @@ class WeixinController extends Controller
             }
        }
        if($MsgType == 'text'){
-            $Content = $data-> Content; //微信发送的内容
-            $result = $this -> userinfo($openid);  //用户信息
-            $ll = $result['openid'];
-            $date = [
-                'openid'=>$ll,
-                'nickname'=> $result['nickname'],
-                'sex'=> $result['sex'],
-                'city'=> $result['city'],
-                'province'=> $result['province'],
-                'headimgurl'=> $result['headimgurl'],
-                'subscribe_time'=> $result['subscribe_time'],
-                'text'=> $Content
-            ];
-            $save = DB::table('wtext')->insertGetId($date);
-            print_r($save);
+
+        $date = [
+                'openid'=>$openid,
+                'text'=> $Content,
+                'text_time'=>$CreateTime
+
+        ];
+            $save = DB::table('wx_text')->insert($date);
+
+        //自动回复天气
+            if(strpos($Content,'+天气')){ //查找字符串首次出现
+                // echo $Content;
+                $city = explode("+",$Content)[0]; //0 是城市   
+                // var_dump($city);
+                //get
+                $url = 'https://free-api.heweather.net/s6/weather/now?parameters&location='.$city.'&key=HE1904161039151125';
+                $arr = json_decode(file_get_contents($url),true);
+                // var_dump($arr);die;
+                if($arr['HeWeather6'][0]['status'] != 'ok'){
+                    echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'客观，您好，请输入正确的城市'.']></Content></xml>';
+                }else{
+                    $fl = $arr['HeWeather6'][0]['now']['tmp'];    //温度
+                    $cond_txt = $arr['HeWeather6'][0]['now']['cond_txt'];  //天气桩孔
+                    $hum = $arr['HeWeather6'][0]['now']['hum'];   //适度
+                    $wind_sc = $arr['HeWeather6'][0]['now']['wind_sc'];   //方向
+                    $wind_dir = $arr['HeWeather6'][0]['now']['wind_dir'];  //放立
+                    $str = '温度:'.$fl."\n".'天气状况:'.$cond_txt."\n".'相对湿度:'.$hum."\n".'风力:'.$wind_sc."\n".'风向:'.$wind_dir."\n";
+
+                    echo'<xml><ToUserName><![CDATA['.$openid.']]></ToUserName>
+                    <FromUserName><![CDATA['.$wx_id.']]></FromUserName>
+                    <CreateTime>'.time().'</CreateTime>
+                    <MsgType><![CDATA[text]]></MsgType>
+                    <Content><![CDATA['.'您所在的'.$city.'天气状况如下'.$str.']]></Content>
+                    </xml>';
+
+                }
+            }
+       }else if($MsgType == 'image'){
+            $wx_images_path =  $this->images($MediaId);
+             //图片信息入库
+             $date = [
+                'openid'=>$openid,
+                'images'=> $wx_images_path,
+                'images_time'=>$CreateTime
+             ];
+             $info = DB::table('wx_image')->insert($date);
+             var_dump($info);
+           
+       }else if($MsgType == 'voice'){
+           $wx_volices_path =  $this->voices($MediaId);
+             $date = [
+                'openid'=>$openid,
+                'volice'=> $wx_volices_path,
+                'volice_time'=>$CreateTime
+             ];
+             $info = DB::table('wx_volice')->insert($date);
+             
        }
     }
 
@@ -169,13 +219,51 @@ class WeixinController extends Controller
 
         // $arr = json_decode();
     }
-    //获取临时素材
-    public function content()
+    /**
+     * 
+     * 下载图片
+     * 用代码实现需加载第三方类库 发送请求
+     */
+    public function images($MediaId)
+    {   //调用接口  
+        $url =  'https://api.weixin.qq.com/cgi-bin/media/get?access_token='.$this->token().'&media_id='.$MediaId;
+        //发送请求
+        $client =  new Client();
+        $response = $client->get($url);
+        // $response=$clinet->request('GET',$url);
+        //   var_dump($response);
+        //获取文件名
+        $file_info = $response->getHeader('Content-disposition'); //数组
+        // var_dump($file_info);die;
+       $file_name = substr(trim($file_info[0],'"'),-20);
+       $new_file_name = rand(1111,9999).'_'.time().$file_name;
+        // echo $new_file_name;
+       $re= Storage::put('weixin/images/'.$new_file_name,$response->getBody());
+    
+       $wx_images_path ='weixin/images/'.$new_file_name;
+        return  $wx_images_path;
+    }
+    //下载语音
+    public function voices($MediaId)
     {
-        $url = 'https://api.weixin.qq.com/cgi-bin/media/get?access_token='.$this->token().'&media_id=MEDIA_ID';
-        $text = file_get_contents($url);
-        echo $text;
+       
+        $url = 'https://api.weixin.qq.com/cgi-bin/media/get?access_token='.$this->token().'&media_id='.$MediaId;
+     
+        $client = new Client();
+       
+        $response =  $client->get($url);
+    
+        $file_info = $response->getHeader('Content-disposition'); //数组
       
-
+       $file_name = substr(trim($file_info[0],'"'),-15);
+       
+       $new_file_name = rand(1111,9999).'_'.time().$file_name;
+   
+       $res= Storage::put('weixin/volices/'.$new_file_name,$response->getBody());
+       
+       $wx_volices_path ='weixin/volices/'.$new_file_name;
+       
+       return $wx_volices_path;
+      
     }
 }
