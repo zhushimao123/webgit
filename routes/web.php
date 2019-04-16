@@ -38,3 +38,7 @@ Route::get('userinfo','WeixinController@userinfo');
  * 创建微信公众号 菜单
  */
 Route::any('create','WeixinController@create');
+/*
+ * 消息的openid
+ */
+Route::get('send','WeixinController@send');

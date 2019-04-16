@@ -79,6 +79,11 @@ class WeixinController extends Controller
                 echo '<xml><ToUserName><![CDATA['.$openid.']]></ToUserName><FromUserName><![CDATA['.$wx_id.']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.'欢迎关注 '.$arr['nickname'].']]></Content></xml>';
             
             }
+       }else if($type =='unsubscribe'){
+           $where = [
+               'openid'=>$openid
+           ];
+           $status = DB::table('p_weixin')->where($where)->update(['sub_status'=>0]);
        }
        if($MsgType == 'text'){
 
@@ -114,7 +119,7 @@ class WeixinController extends Controller
                     <CreateTime>'.time().'</CreateTime>
                     <MsgType><![CDATA[text]]></MsgType>
                     <Content><![CDATA['.'您所在的'.$city.'天气状况如下'.$str.']]></Content>
-                    </xml>';
+                    <MsgId>22267728679376743</MsgId></xml>';
 
                 }
             }
@@ -265,5 +270,44 @@ class WeixinController extends Controller
        
        return $wx_volices_path;
       
+    }
+    /*
+     * 微信群发 
+     * 1、获取数据库 openid （根据openid消息群发）
+     */
+    public function send()
+    {
+        $res = DB::table('p_weixin')->where(['sub_status'=>1])->get()->toArray();
+        $open_id = array_column($res,'openid');
+        $content = '乔治是个大笨猪i';
+        $result = $this-> sendText($open_id,$content);
+        echo $result;
+    }
+    /*
+     * http请求方式: POST
+     *  https://api.weixin.qq.com/cgi-bin/message/mass/send?access_token=ACCESS_TOKEN
+     */
+    public function sendText($open_id,$content){
+        //接口
+       $url = 'https://api.weixin.qq.com/cgi-bin/message/mass/send?access_token='.$this->token();
+        $text = [
+            'touser'=> $open_id,
+            'msgtype'=> 'text',
+            'text'=> [
+                'content'=> $content
+            ]
+        ];
+        $json = json_encode($text,JSON_UNESCAPED_UNICODE);//处理中文
+        
+        //发送请求
+        $client = new Client();
+
+        $response = $client->request('POST',$url,[
+            'body' => $json
+        ]);
+      
+        //处理响应
+        echo  $response->getBody();
+    
     }
 }
