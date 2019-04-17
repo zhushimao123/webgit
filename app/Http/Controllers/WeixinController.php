@@ -50,7 +50,7 @@ class WeixinController extends Controller
         $MediaId = $data -> MediaId;
         // echo $MediaId;
 //        echo $data-> EventKey;echo "<br>";  //事件密钥
-        //substribe 扫码关注事件
+        //substribe 扫码关注
        if($type =='subscribe'){
             //根据openid来查是否是唯一用户关注
             $l = DB::table('p_weixin')->where(['openid'=>$openid])->first();
@@ -102,10 +102,7 @@ class WeixinController extends Controller
 
         //自动回复天气
             if(strpos($Content,'+天气')){ //查找字符串首次出现
-                // echo $Content;
                 $city = explode("+",$Content)[0]; //0 是城市   
-                // var_dump($city);
-                //get
                 $url = 'https://free-api.heweather.net/s6/weather/now?parameters&location='.$city.'&key=HE1904161039151125';
                 $arr = json_decode(file_get_contents($url),true);
                 // var_dump($arr);die;
@@ -202,17 +199,9 @@ class WeixinController extends Controller
                     'key'=>"V1001_TODAY_MUSIC"
                 ],
                 [
-                    // 'name'=> '月七',
-                    // "sub_button" =>[
-                    //     'type'=> 'view',
-                    //     'name'=> '搜索',
-                    //     'url'=>"http://www.soso.com/"
-                    // ],
-                    // [
                         'type'=> 'click',
                         'name'=> '赞下',
                         'key'=>"V1001_GOOD"
-                    // ]
                 ]
             ]
         ];
@@ -284,7 +273,7 @@ class WeixinController extends Controller
     {
         $res = DB::table('p_weixin')->where(['sub_status'=>1])->get()->toArray();
         $open_id = array_column($res,'openid');
-        $content = '猪猪';
+        $content = 'pig';
         $result = $this-> sendText($open_id,$content);
         echo $result;
     }
