@@ -273,7 +273,7 @@ class WeixinController extends Controller
     {
         $res = DB::table('p_weixin')->where(['sub_status'=>1])->get()->toArray();
         $open_id = array_column($res,'openid');
-        $content = 'pig';
+        $content = '午好';
         $result = $this-> sendText($open_id,$content);
         echo $result;
     }

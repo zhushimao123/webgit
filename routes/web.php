@@ -42,3 +42,10 @@ Route::any('create','WeixinController@create');
  * 消息的openid
  */
 Route::get('send','WeixinController@send');
+/*
+ * 微信支付测试
+ */
+Route::get('test','WxPayController@test');
+
+//支付成功回调
+Route::post('notify','WxPayController@notify');
